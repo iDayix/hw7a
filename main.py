@@ -44,7 +44,7 @@ class Tm:
     self.input_alphabet = ["_", "0", "1"]
     self.tape_alphabet = ["_", "0", "1", "x"]
     self.state = None
-    self.input = ["1", "0"]
+    self.input = ["1", "0", "_", "0", "1"]
 
 
 # Our verifier.
@@ -110,14 +110,18 @@ for i in range(n+2, pn):
 # TODO: 4. You end up in an accept state.
 # Should be an iterated OR state
 for t in range(pn):
+  # s.add(Implies(Q['qA'][t], Not(Q['qR'][t])))
+
+  # s.add(Implies(Or(Q['qA'][t]), Q['qA'][t]))
   # s.add(Or(Q['qA'][t]))
-  s.add(Implies(Q['qA'][t], Not(Q['qR'][t])))
+  print(Or(Q['qA'][t]))
+
 
 
 
 # TODO: Never enter a reject state
-# for t in range(pn):
-#   s.add(Not(Q['qR'][t]))
+for t in range(pn):
+  s.add(Not(Q['qR'][t]))
 
 
 # TODO: 5. Each step of the machine is computed according to the transition.
@@ -178,8 +182,8 @@ for i in range(pn):
 
 # # TODO: Head must be somewhere at each time step.
 # for i in range(pn):
-#   for t in range(pn):
-#     s.add(H[i][t])
+for t in range(pn):
+  s.add(Or(H[t]))
 
 
 # # TODO: 6c. If something is written on a tape cell, nothing else is written there.
