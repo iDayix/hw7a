@@ -44,7 +44,7 @@ class Tm:
     self.input_alphabet = ["_", "0", "1"]
     self.tape_alphabet = ["_", "0", "1", "x"]
     self.state = None
-    self.input = []
+    self.input = ["1", "0"]
 
 
 # Our verifier.
@@ -102,36 +102,49 @@ for i in range(n):
 s.add(X['_'][n+1][0])
 
 # TODO: At time 1+, any tape symbols allowed
-for i in range(n+1, pn):
+for i in range(n+2, pn):
   for a in tm.tape_alphabet:
     s.add(X[a][i][0])
 
 
 # TODO: 4. You end up in an accept state.
+# Should be an iterated OR state
 for t in range(pn):
-  s.add(Q['qA'][t])
+  # s.add(Or(Q['qA'][t]))
+  s.add(Implies(Q['qA'][t], Not(Q['qR'][t])))
+
+
 
 # TODO: Never enter a reject state
-for t in range(pn):
-  s.add(Not(Q['qR'][t]))
+# for t in range(pn):
+#   s.add(Not(Q['qR'][t]))
 
 
 # TODO: 5. Each step of the machine is computed according to the transition.
 for q in tm.states:
   for a in tm.tape_alphabet:
-    for i in range(pn):
-      for t in range(pn):
+    for i in range(pn-1):
+      for t in range(pn-1):
 
         # This needs to be worked on, never runs
-        if q in tm.delta and a in tm.delta:
+        # print(tm.delta[t])
+        if q in tm.delta[t] and a in tm.delta[t]:
+          # print("q and a in delta")
           # print(tm.delta[(q,a)])
-          r, b, direction = tm.delta[(q, a)]
+          # r, b, direction = tm.delta[t]
+          r = tm.delta[t][0]
+          direction = tm.delta[t][4]
+          b = tm.delta[t][1]
           # direction = tm.delta[-1]
           # Right, Left
           if direction == "R":
-            s.add(Implies(And(Q[q][t], H[i][t], X[a][i][t]), And(Q[r][i+1], H[i+1][t+1], X[b][i][t+1])))
+            s.add(Implies(And(Q[q][t], H[i][t], X[a][i][t]), And(Q[r][t+1], H[i+1][t+1], X[b][i][t+1])))
           elif direction == "L":
-            s.add(Implies(And(Q[q][t], H[i][t], X[a][i][t]), And(Q[r][i+1], H[i-1][t+1], X[b][i][t+1])))
+            if i == 0:
+              s.add(Implies(And(Q[q][t], H[i][t], X[a][i][t]), And(Q[r][t+1], H[i][t+1], X[b][i][t+1])))
+            
+            else:
+              s.add(Implies(And(Q[q][t], H[i][t], X[a][i][t]), And(Q[r][t+1], H[i-1][t+1], X[b][i][t+1])))
 
 
         # If the head is not in the immediate vicinity, copy.
@@ -139,8 +152,8 @@ for q in tm.states:
           for j in range(pn):
             if i == j:
               continue
-            # for some reason t+1 throws an error
-            s.add(Implies(And(H[i][t], X[a][j][t]), X[a][j][t]))
+            # for some reason t+1 throws an error < Fixed >
+            s.add(Implies(And(H[i][t], X[a][j][t]), X[a][i][t+1]))
 
 # # TODO: 6a. If you're in one state, you're not in another.
 for q in tm.states:
@@ -164,19 +177,19 @@ for i in range(pn):
 
 
 # # TODO: Head must be somewhere at each time step.
-for i in range(pn):
-  for t in range(pn):
-    s.add(H[i][t])
+# for i in range(pn):
+#   for t in range(pn):
+#     s.add(H[i][t])
 
 
 # # TODO: 6c. If something is written on a tape cell, nothing else is written there.
-for a in tm.tape_alphabet:
-  for b in tm.tape_alphabet:
-    if a == b:
-      continue
-    for i in range(pn):
-      for t in range(pn):
-        s.add(Implies(X[a][i][t], Not(X[b][i][t])))
+# for a in tm.tape_alphabet:
+#   for b in tm.tape_alphabet:
+#     if a == b:
+#       continue
+#     for i in range(pn):
+#       for t in range(pn):
+#         s.add(Implies(X[a][i][t], Not(X[b][i][t])))
 
 
 
@@ -184,4 +197,4 @@ print(s.check())
 m = s.model()
 print(m)
 
-# TODO: Output# 418hw7a
+# TODO: Output
