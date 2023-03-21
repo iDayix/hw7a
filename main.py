@@ -44,7 +44,7 @@ class Tm:
     self.input_alphabet = ["_", "0", "1"]
     self.tape_alphabet = ["_", "0", "1", "x"]
     self.state = None
-    self.input = ["1", "0", "_", "0", "1"]
+    self.input = []
 
 
 # Our verifier.
@@ -84,6 +84,8 @@ for a in tm.tape_alphabet:
       tmp.append(Bool(f'{a}_{i}_{t}'))
       X[a].append(tmp)
 
+# print(X)
+
 
 
 # 1. The machine starts off in its start state.
@@ -109,13 +111,21 @@ for i in range(n+2, pn):
 
 # TODO: 4. You end up in an accept state.
 # Should be an iterated OR state
+
+tst = []
 for t in range(pn):
   # s.add(Implies(Q['qA'][t], Not(Q['qR'][t])))
 
   # s.add(Implies(Or(Q['qA'][t]), Q['qA'][t]))
   # s.add(Or(Q['qA'][t]))
-  print(Or(Q['qA'][t]))
+  tst.append(Q['qA'][t])
+  # print(s.check(Or(Q['qA'][t])).r)
+  # print(tst)
+  # s.add(Implies(Or(Q['qA'][t]), ))
 
+# print(s.check(Or(False)))
+s.add(Or(tst))
+# print(s)
 
 
 
@@ -187,18 +197,33 @@ for t in range(pn):
 
 
 # # TODO: 6c. If something is written on a tape cell, nothing else is written there.
-# for a in tm.tape_alphabet:
-#   for b in tm.tape_alphabet:
-#     if a == b:
-#       continue
-#     for i in range(pn):
-#       for t in range(pn):
-#         s.add(Implies(X[a][i][t], Not(X[b][i][t])))
+for a in tm.tape_alphabet:
+  for b in tm.tape_alphabet:
+    if a == b:
+      continue
+    for i in range(pn):
+      for t in range(pn):
+        print(Implies(X[a][i][t], Not(X[b][i][t])))
+        s.add(Implies(X[a][i][t], Not(X[b][i][t])))
 
 
 
 print(s.check())
-m = s.model()
-print(m)
+# m = s.model()
+# print(m)
 
 # TODO: Output
+
+if s.check() == sat:
+  m=s.model()
+  # print(m)
+
+  for t in m.decls():
+    if is_true(m[t]):
+      print(t)
+  # for items in m:
+  #   print(items)
+    # for t in range(pn):
+    #   print(m[1])
+
+    # print(m)
