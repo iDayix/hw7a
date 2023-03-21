@@ -44,7 +44,7 @@ class Tm:
     self.input_alphabet = ["_", "0", "1"]
     self.tape_alphabet = ["_", "0", "1", "x"]
     self.state = None
-    self.input = []
+    self.input = ["1", "1"]
 
 
 # Our verifier.
@@ -95,18 +95,30 @@ s.add(Q[tm.start_state][0])
 s.add(H[0][0])
 
 # TODO: 3. Each tape cell has some symbol in it at each point in time.
-for i in range(n):
+for i in range(n-1):
   s.add(X[tm.input[i]][i][0])
 
 
 # TODO: At time 0, only input symbols allowed.
 
-s.add(X['_'][n+1][0])
+# At n, it should be a _, which puts it in lx state (Should be SAT?)
+# For some reason, if I have this, it will become undecidable
+# For 2+ inputs...
+# s.add(X["_"][n][0])
+
+for i in range(n, pn):
+  s.add(Or([X[a][i][0] for a in tm.input_alphabet]))
 
 # TODO: At time 1+, any tape symbols allowed
-for i in range(n+2, pn):
-  for a in tm.tape_alphabet:
-    s.add(X[a][i][0])
+# for i in range(n+2, pn):
+#   # for a in tm.tape_alphabet:
+#   for t in range(pn):
+#     # s.add(X[a][i][0])
+#     s.add(Or([X[a][i][t] for a in tm.tape_alphabet]))
+
+for i in range(pn):
+  for t in range(1, pn):
+    s.add(Or([X[a][i][t] for a in tm.tape_alphabet]))
 
 
 # TODO: 4. You end up in an accept state.
@@ -142,13 +154,13 @@ for q in tm.states:
 
         # This needs to be worked on, never runs
         # print(tm.delta[t])
-        if q in tm.delta[t] and a in tm.delta[t]:
+        if q in tm.delta[t][0] and a in tm.delta[t][1]:
           # print("q and a in delta")
           # print(tm.delta[(q,a)])
           # r, b, direction = tm.delta[t]
-          r = tm.delta[t][0]
+          r = tm.delta[t][2]
           direction = tm.delta[t][4]
-          b = tm.delta[t][1]
+          b = tm.delta[t][3]
           # direction = tm.delta[-1]
           # Right, Left
           if direction == "R":
@@ -167,7 +179,7 @@ for q in tm.states:
             if i == j:
               continue
             # for some reason t+1 throws an error < Fixed >
-            s.add(Implies(And(H[i][t], X[a][j][t]), X[a][i][t+1]))
+            s.add(Implies(And(H[i][t], X[a][j][t]), X[a][j][t+1]))
 
 # # TODO: 6a. If you're in one state, you're not in another.
 for q in tm.states:
@@ -191,9 +203,16 @@ for i in range(pn):
 
 
 # # TODO: Head must be somewhere at each time step.
-# for i in range(pn):
+
 for t in range(pn):
-  s.add(Or(H[t]))
+  tmp = []
+  for i in range(pn):
+    tmp.append(H[i][t])
+
+  s.add(Or(tmp))
+
+# for t in range(pn):
+#   s.add(Or(H[t]))
 
 
 # # TODO: 6c. If something is written on a tape cell, nothing else is written there.
@@ -203,24 +222,36 @@ for a in tm.tape_alphabet:
       continue
     for i in range(pn):
       for t in range(pn):
-        print(Implies(X[a][i][t], Not(X[b][i][t])))
         s.add(Implies(X[a][i][t], Not(X[b][i][t])))
 
 
 
-print(s.check())
+# print(s.check())
 # m = s.model()
 # print(m)
 
 # TODO: Output
 
 if s.check() == sat:
+  print('Sat')
   m=s.model()
   # print(m)
 
-  for t in m.decls():
-    if is_true(m[t]):
-      print(t)
+  # for t in m.decls():
+  #   if is_true(m[t]):
+
+  #     print(t)
+
+  r = []
+
+  for x in m:
+    if is_true(m[x]):
+      r.append(x)
+
+  print(r)
+  
+
+
   # for items in m:
   #   print(items)
     # for t in range(pn):
